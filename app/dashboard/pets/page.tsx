@@ -25,12 +25,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useAuthStore, Pet } from '@/lib/auth-store'
+import { useUserDataStore, Pet } from '@/lib/user-data-store'
 import { dogSizes, dogAges } from '@/lib/data'
 import { toast } from 'sonner'
 
 export default function PetsPage() {
-  const { pets, addPet, updatePet, removePet } = useAuthStore()
+  const { pets, addPet, updatePet, removePet } = useUserDataStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPet, setEditingPet] = useState<Pet | null>(null)
   const [deletingPet, setDeletingPet] = useState<string | null>(null)

@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Dog, Home, Calendar, Gift, PawPrint, RotateCcw, Settings, LogOut, Star } from 'lucide-react'
+import { Dog, Home, Calendar, Gift, PawPrint, RotateCcw, Settings, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useAuthStore } from '@/lib/auth-store'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { UserButton, useUser, SignIn } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
 
 const navItems = [
@@ -23,23 +21,36 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const { user, isLoaded, isSignedIn } = useUser()
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/')
-    }
-  }, [isAuthenticated, router])
-
-  if (!isAuthenticated || !user) {
-    return null
+  // Show loading state while Clerk is initializing
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/20" />
+          <div className="h-4 w-32 bg-muted rounded" />
+        </div>
+      </div>
+    )
   }
 
-  const handleLogout = () => {
-    logout()
-    router.push('/')
+  // Redirect to sign in if not authenticated
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <SignIn routing="hash" />
+      </div>
+    )
   }
+
+  const userInitials = user?.firstName && user?.lastName 
+    ? `${user.firstName[0]}${user.lastName[0]}`
+    : user?.firstName?.[0] || 'U'
+
+  // Mock reward data - in production this would come from your database
+  const rewardPoints = 450
+  const tier = 'Gold Paw'
 
   const getTierColor = (tier: string) => {
     switch (tier) {
@@ -64,15 +75,16 @@ export default function DashboardLayout({
         {/* User Info */}
         <div className="flex items-center gap-3 mb-8 p-3 bg-secondary/50 rounded-xl">
           <Avatar className="h-12 w-12">
+            <AvatarImage src={user?.imageUrl} alt={user?.fullName || 'User'} />
             <AvatarFallback className="bg-primary text-primary-foreground font-serif">
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {userInitials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-card-foreground truncate">{user.name}</p>
+            <p className="font-medium text-card-foreground truncate">{user?.fullName || user?.firstName}</p>
             <div className="flex items-center gap-1">
-              <span className={`w-2 h-2 rounded-full ${getTierColor(user.tier)}`} />
-              <span className="text-xs text-muted-foreground">{user.tier}</span>
+              <span className={`w-2 h-2 rounded-full ${getTierColor(tier)}`} />
+              <span className="text-xs text-muted-foreground">{tier}</span>
             </div>
           </div>
         </div>
@@ -81,7 +93,7 @@ export default function DashboardLayout({
         <div className="mb-8 p-4 bg-accent/10 rounded-xl text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Star className="w-5 h-5 text-accent fill-accent" />
-            <span className="font-serif text-2xl font-bold text-foreground">{user.rewardPoints}</span>
+            <span className="font-serif text-2xl font-bold text-foreground">{rewardPoints}</span>
           </div>
           <p className="text-sm text-muted-foreground">Reward Points</p>
         </div>
@@ -101,16 +113,12 @@ export default function DashboardLayout({
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* User Button */}
         <div className="absolute bottom-6 left-6 right-6">
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-3"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3 p-3 bg-secondary/30 rounded-xl">
+            <UserButton afterSignOutUrl="/" />
+            <span className="text-sm text-muted-foreground">Manage Account</span>
+          </div>
         </div>
       </aside>
 
@@ -125,13 +133,9 @@ export default function DashboardLayout({
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 px-2 py-1 bg-accent/10 rounded-full">
             <Star className="w-4 h-4 text-accent fill-accent" />
-            <span className="text-sm font-medium text-foreground">{user.rewardPoints}</span>
+            <span className="text-sm font-medium text-foreground">{rewardPoints}</span>
           </div>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-              {user.name.split(' ').map(n => n[0]).join('')}
-            </AvatarFallback>
-          </Avatar>
+          <UserButton afterSignOutUrl="/" />
         </div>
       </header>
 

@@ -6,7 +6,7 @@ import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useBookingStore } from '@/lib/booking-store'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUserDataStore } from '@/lib/user-data-store'
 import { services, addOns } from '@/lib/data'
 import { BookingStep1 } from '@/components/booking/step-1-service'
 import { BookingStep2 } from '@/components/booking/step-2-datetime'
@@ -27,7 +27,7 @@ export function BookingWizard() {
   const [currentStep, setCurrentStep] = useState(1)
   const [isBooked, setIsBooked] = useState(false)
   const booking = useBookingStore()
-  const { addBooking, isAuthenticated } = useAuthStore()
+  const { addBooking } = useUserDataStore()
 
   const canProceed = () => {
     switch (currentStep) {
@@ -39,7 +39,7 @@ export function BookingWizard() {
         return booking.ownerName && booking.ownerEmail && booking.ownerPhone && 
                booking.petName && booking.petBreed && booking.petSize && booking.petAge
       case 4:
-        return booking.cardNumber && booking.cardExpiry && booking.cardCvc
+        return booking.paymentComplete
       default:
         return true
     }

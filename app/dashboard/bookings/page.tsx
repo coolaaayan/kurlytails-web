@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, PawPrint, X, AlertCircle } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,11 +17,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUserDataStore } from '@/lib/user-data-store'
 import { toast } from 'sonner'
 
 export default function BookingsPage() {
-  const { bookings, cancelBooking } = useAuthStore()
+  const { bookings, cancelBooking } = useUserDataStore()
   const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   const upcomingBookings = bookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending')

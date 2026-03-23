@@ -5,19 +5,21 @@ import { Calendar, Gift, PawPrint, Clock, ChevronRight, Star } from 'lucide-reac
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUser } from '@clerk/nextjs'
+import { useUserDataStore } from '@/lib/user-data-store'
 import { rewardTiers } from '@/lib/data'
 
 export default function DashboardOverview() {
-  const { user, bookings, pets } = useAuthStore()
+  const { user } = useUser()
+  const { rewardPoints, tier, bookings, pets } = useUserDataStore()
 
   if (!user) return null
 
   const upcomingBookings = bookings.filter(b => b.status === 'Confirmed' || b.status === 'Pending')
-  const currentTier = rewardTiers.find(t => user.rewardPoints >= t.minPoints && user.rewardPoints <= t.maxPoints)
-  const nextTier = rewardTiers.find(t => t.minPoints > user.rewardPoints)
+  const currentTier = rewardTiers.find(t => rewardPoints >= t.minPoints && rewardPoints <= t.maxPoints)
+  const nextTier = rewardTiers.find(t => t.minPoints > rewardPoints)
   const progressToNextTier = nextTier 
-    ? ((user.rewardPoints - (currentTier?.minPoints || 0)) / (nextTier.minPoints - (currentTier?.minPoints || 0))) * 100
+    ? ((rewardPoints - (currentTier?.minPoints || 0)) / (nextTier.minPoints - (currentTier?.minPoints || 0))) * 100
     : 100
 
   const getStatusColor = (status: string) => {
@@ -35,7 +37,7 @@ export default function DashboardOverview() {
       {/* Welcome Header */}
       <div>
         <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
-          Welcome back, {user.name.split(' ')[0]}!
+          Welcome back, {user.firstName || 'there'}!
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s what&apos;s happening with your account.
@@ -69,7 +71,7 @@ export default function DashboardOverview() {
               <div>
                 <p className="text-sm text-muted-foreground">Reward Points</p>
                 <p className="font-serif text-2xl font-bold text-card-foreground">
-                  {user.rewardPoints}
+                  {rewardPoints}
                 </p>
               </div>
             </div>
@@ -107,11 +109,11 @@ export default function DashboardOverview() {
           <div className="flex items-center gap-4 mb-4">
             <div className="flex items-center gap-2">
               <Star className="w-5 h-5 text-accent fill-accent" />
-              <span className="font-medium text-foreground">{user.tier}</span>
+              <span className="font-medium text-foreground">{tier}</span>
             </div>
             {nextTier && (
               <span className="text-sm text-muted-foreground">
-                {nextTier.minPoints - user.rewardPoints} points to {nextTier.name}
+                {nextTier.minPoints - rewardPoints} points to {nextTier.name}
               </span>
             )}
           </div>

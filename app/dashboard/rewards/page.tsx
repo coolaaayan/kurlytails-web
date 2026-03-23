@@ -4,7 +4,7 @@ import { Star, Gift, Crown, Check, TrendingUp, TrendingDown } from 'lucide-react
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUserDataStore } from '@/lib/user-data-store'
 import { rewardTiers } from '@/lib/data'
 import { toast } from 'sonner'
 
@@ -17,14 +17,12 @@ const redemptionOptions = [
 ]
 
 export default function RewardsPage() {
-  const { user, pointsHistory, redeemPoints } = useAuthStore()
+  const { rewardPoints, tier, pointsHistory, redeemPoints } = useUserDataStore()
 
-  if (!user) return null
-
-  const currentTier = rewardTiers.find(t => user.rewardPoints >= t.minPoints && user.rewardPoints <= t.maxPoints)
-  const nextTier = rewardTiers.find(t => t.minPoints > user.rewardPoints)
+  const currentTier = rewardTiers.find(t => rewardPoints >= t.minPoints && rewardPoints <= t.maxPoints)
+  const nextTier = rewardTiers.find(t => t.minPoints > rewardPoints)
   const progressToNextTier = nextTier 
-    ? ((user.rewardPoints - (currentTier?.minPoints || 0)) / (nextTier.minPoints - (currentTier?.minPoints || 0))) * 100
+    ? ((rewardPoints - (currentTier?.minPoints || 0)) / (nextTier.minPoints - (currentTier?.minPoints || 0))) * 100
     : 100
 
   const getTierIcon = (tierName: string) => {
@@ -44,11 +42,11 @@ export default function RewardsPage() {
   }
 
   const handleRedeem = (option: typeof redemptionOptions[0]) => {
-    if (user.rewardPoints >= option.points) {
+    if (rewardPoints >= option.points) {
       redeemPoints(option.points, `Redeemed for ${option.value}`)
       toast.success(`Successfully redeemed ${option.points} points for ${option.value}!`)
     } else {
-      toast.error(`Not enough points. You need ${option.points - user.rewardPoints} more points.`)
+      toast.error(`Not enough points. You need ${option.points - rewardPoints} more points.`)
     }
   }
 
@@ -67,17 +65,17 @@ export default function RewardsPage() {
               <p className="text-primary-foreground/80 mb-2">Your Points Balance</p>
               <div className="flex items-center gap-3">
                 <Star className="w-8 h-8 fill-current" />
-                <span className="font-serif text-5xl font-bold">{user.rewardPoints}</span>
+                <span className="font-serif text-5xl font-bold">{rewardPoints}</span>
               </div>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-2 justify-end mb-2">
-                {getTierIcon(user.tier)}
-                <span className="font-serif text-xl font-bold">{user.tier}</span>
+                {getTierIcon(tier)}
+                <span className="font-serif text-xl font-bold">{tier}</span>
               </div>
               {nextTier && (
                 <p className="text-primary-foreground/80 text-sm">
-                  {nextTier.minPoints - user.rewardPoints} points to {nextTier.name}
+                  {nextTier.minPoints - rewardPoints} points to {nextTier.name}
                 </p>
               )}
             </div>
@@ -104,19 +102,19 @@ export default function RewardsPage() {
       <div>
         <h2 className="font-serif text-xl font-bold text-foreground mb-4">Membership Tiers</h2>
         <div className="grid md:grid-cols-3 gap-4">
-          {rewardTiers.map((tier) => {
-            const isCurrentTier = tier.name === user.tier
+          {rewardTiers.map((t) => {
+            const isCurrentTier = t.name === tier
             return (
               <Card 
-                key={tier.name} 
-                className={`border-2 ${isCurrentTier ? getTierColor(tier.name) : 'border-border bg-card'}`}
+                key={t.name} 
+                className={`border-2 ${isCurrentTier ? getTierColor(t.name) : 'border-border bg-card'}`}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {getTierIcon(tier.name)}
+                      {getTierIcon(t.name)}
                       <CardTitle className="font-serif text-lg text-card-foreground">
-                        {tier.name}
+                        {t.name}
                       </CardTitle>
                     </div>
                     {isCurrentTier && (
@@ -126,12 +124,12 @@ export default function RewardsPage() {
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {tier.minPoints}+ points
+                    {t.minPoints}+ points
                   </p>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {tier.perks.map((perk) => (
+                    {t.perks.map((perk) => (
                       <li key={perk} className="flex items-center gap-2 text-sm">
                         <Check className="w-4 h-4 text-accent" />
                         <span className="text-muted-foreground">{perk}</span>
@@ -150,7 +148,7 @@ export default function RewardsPage() {
         <h2 className="font-serif text-xl font-bold text-foreground mb-4">Redeem Points</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {redemptionOptions.map((option) => {
-            const canRedeem = user.rewardPoints >= option.points
+            const canRedeem = rewardPoints >= option.points
             return (
               <Card key={option.points} className="bg-card border-border">
                 <CardContent className="p-6">
@@ -170,7 +168,7 @@ export default function RewardsPage() {
                     disabled={!canRedeem}
                     onClick={() => handleRedeem(option)}
                   >
-                    {canRedeem ? 'Redeem Now' : `Need ${option.points - user.rewardPoints} more`}
+                    {canRedeem ? 'Redeem Now' : `Need ${option.points - rewardPoints} more`}
                   </Button>
                 </CardContent>
               </Card>

@@ -26,6 +26,7 @@ export interface BookingState {
   promoDiscount: number
   useRewardPoints: boolean
   rewardPointsDiscount: number
+  paymentComplete: boolean
   cardNumber: string
   cardExpiry: string
   cardCvc: string
@@ -41,6 +42,7 @@ export interface BookingState {
   applyPromoCode: (code: string) => boolean
   setUseRewardPoints: (use: boolean) => void
   setCardDetails: (details: Partial<Pick<BookingState, 'cardNumber' | 'cardExpiry' | 'cardCvc'>>) => void
+  setPaymentComplete: (complete: boolean) => void
   reset: () => void
 }
 
@@ -61,6 +63,7 @@ const initialState = {
   promoDiscount: 0,
   useRewardPoints: false,
   rewardPointsDiscount: 0,
+  paymentComplete: false,
   cardNumber: '',
   cardExpiry: '',
   cardCvc: '',
@@ -102,6 +105,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   }),
   
   setCardDetails: (details) => set(details),
+  
+  setPaymentComplete: (complete) => set({ paymentComplete: complete }),
   
   reset: () => set(initialState),
 }))

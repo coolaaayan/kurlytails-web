@@ -1,23 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Bell, Lock, Save } from 'lucide-react'
+import { User, Bell, Save, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
-  const { user, updateProfile } = useAuthStore()
+  const { user } = useUser()
+  const { openUserProfile } = useClerk()
   
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+    phone: '',
   })
   
   const [notifications, setNotifications] = useState({
@@ -26,37 +25,13 @@ export default function SettingsPage() {
     promotions: true,
     reminders: true,
   })
-  
-  const [passwords, setPasswords] = useState({
-    current: '',
-    new: '',
-    confirm: '',
-  })
 
   const handleSaveProfile = () => {
-    updateProfile(profileData)
     toast.success('Profile updated successfully')
   }
 
   const handleSaveNotifications = () => {
     toast.success('Notification preferences saved')
-  }
-
-  const handleChangePassword = () => {
-    if (!passwords.current || !passwords.new || !passwords.confirm) {
-      toast.error('Please fill in all password fields')
-      return
-    }
-    if (passwords.new !== passwords.confirm) {
-      toast.error('New passwords do not match')
-      return
-    }
-    if (passwords.new.length < 8) {
-      toast.error('Password must be at least 8 characters')
-      return
-    }
-    toast.success('Password changed successfully')
-    setPasswords({ current: '', new: '', confirm: '' })
   }
 
   if (!user) return null
@@ -75,7 +50,7 @@ export default function SettingsPage() {
             <User className="w-5 h-5 text-primary" />
             <CardTitle className="font-serif text-xl text-card-foreground">Profile</CardTitle>
           </div>
-          <CardDescription>Update your personal information</CardDescription>
+          <CardDescription>Your account information managed by Clerk</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -83,8 +58,9 @@ export default function SettingsPage() {
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
-                value={profileData.name}
-                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                value={user.fullName || ''}
+                disabled
+                className="bg-muted"
               />
             </div>
             <div className="space-y-2">
@@ -92,8 +68,9 @@ export default function SettingsPage() {
               <Input
                 id="email"
                 type="email"
-                value={profileData.email}
-                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                value={user.primaryEmailAddress?.emailAddress || ''}
+                disabled
+                className="bg-muted"
               />
             </div>
           </div>
@@ -107,13 +84,25 @@ export default function SettingsPage() {
               onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
             />
           </div>
-          <Button 
-            onClick={handleSaveProfile}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              onClick={handleSaveProfile}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Phone
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => openUserProfile()}
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Manage Account
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            To update your name, email, or password, click &quot;Manage Account&quot; to access your Clerk profile.
+          </p>
         </CardContent>
       </Card>
 
@@ -183,55 +172,6 @@ export default function SettingsPage() {
           >
             <Save className="w-4 h-4 mr-2" />
             Save Preferences
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Password Change */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-primary" />
-            <CardTitle className="font-serif text-xl text-card-foreground">Password</CardTitle>
-          </div>
-          <CardDescription>Update your password to keep your account secure</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Current Password</Label>
-            <Input
-              id="current-password"
-              type="password"
-              value={passwords.current}
-              onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-            />
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={passwords.new}
-                onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={passwords.confirm}
-                onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-              />
-            </div>
-          </div>
-          <Button 
-            onClick={handleChangePassword}
-            variant="outline"
-          >
-            <Lock className="w-4 h-4 mr-2" />
-            Change Password
           </Button>
         </CardContent>
       </Card>

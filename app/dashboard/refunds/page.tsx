@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { useAuthStore } from '@/lib/auth-store'
+import { useUserDataStore } from '@/lib/user-data-store'
 import { toast } from 'sonner'
 
 const refundReasons = [
@@ -27,7 +27,7 @@ const refundReasons = [
 ]
 
 export default function RefundsPage() {
-  const { bookings, refundRequests, requestRefund } = useAuthStore()
+  const { bookings, refundRequests, requestRefund } = useUserDataStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedBookingId, setSelectedBookingId] = useState('')
   const [reason, setReason] = useState('')
